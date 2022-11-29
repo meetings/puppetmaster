@@ -1,0 +1,5 @@
+#!/bin/sh
+# Log a warning if modules for the current kernel are not to be found.
+
+[ -d /lib/modules/$(uname -r) ] || \
+    logger -t linux -p local1.warning "$(hostname): kernel modules missing"

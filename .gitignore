@@ -1,0 +1,7 @@
+/lastrun
+/memo.txt
+cgi/githupdate*
+/build/.vagrant
+/.vagrant/machines
+/ansible/ansible.log
+/modules/ssh/files/pf/build

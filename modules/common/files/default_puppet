@@ -1,0 +1,7 @@
+# /etc/default/puppet, sourced by /etc/init.d/puppet
+#
+# This file is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+
+START=no
+DAEMON_OPTS=""

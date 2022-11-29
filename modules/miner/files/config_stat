@@ -1,0 +1,5 @@
+# /root/.ssh/config_stat
+
+Host *.dicole.com
+    User stat
+    IdentityFile /root/.ssh/stat

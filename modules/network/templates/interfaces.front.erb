@@ -1,0 +1,35 @@
+# /etc/network/interfaces
+# For more information, see interfaces(5).
+#
+# This file is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+
+auto lo eth0
+
+iface lo inet loopback
+
+iface eth0 inet static
+  address <%= @ipaddress %>
+  netmask 255.0.0.0
+  gateway 10.0.0.1
+  post-up ethtool -K eth0 tx off
+
+iface eth0 inet static
+  address 78.46.26.1
+  netmask 255.255.255.255
+
+iface eth0 inet static
+  address 144.76.145.16
+  netmask 255.255.255.255
+
+iface eth0 inet static
+  address 176.9.12.105
+  netmask 255.255.255.255
+
+iface eth0 inet static
+  address 176.9.12.106
+  netmask 255.255.255.255
+
+iface eth0 inet static
+  address 176.9.15.204
+  netmask 255.255.255.255

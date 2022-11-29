@@ -1,0 +1,42 @@
+# /etc/postfix/main.cf
+
+# minimal banner
+smtpd_banner = $myhostname ESMTP
+
+# biff not required
+biff = no
+
+# zero means no limit
+mailbox_size_limit = 0
+
+# appending domain is MUA's job
+append_dot_mydomain = no
+
+# separator between names and address extensions
+recipient_delimiter = +
+
+# interface and protocol for receiving mail
+inet_protocols  = ipv4
+inet_interfaces = loopback-only
+
+# local delivery configuration
+myorigin = /etc/mailname
+mydestination = localhost
+mynetworks = 127.0.0.0/8
+
+# alias databases for local delivery
+alias_database = hash:/etc/aliases
+alias_maps     = hash:/etc/aliases
+
+# transport options
+default_transport = smtp:x:587
+
+# use tls
+smtp_use_tls            = yes
+smtp_tls_security_level = encrypt
+smtp_tls_CAfile         = /etc/ssl/certs/ca-certificates.crt
+
+# sasl authentication options
+smtp_sasl_auth_enable      = yes
+smtp_sasl_password_maps    = hash:/etc/postfix/passwd
+smtp_sasl_security_options = noanonymous

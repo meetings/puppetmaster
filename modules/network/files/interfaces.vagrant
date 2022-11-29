@@ -1,0 +1,11 @@
+# /etc/network/interfaces
+# For more information, see interfaces(5).
+#
+# This file is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+
+auto lo eth0
+
+iface lo inet loopback
+
+iface eth0 inet dhcp

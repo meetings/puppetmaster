@@ -1,0 +1,18 @@
+# /etc/apt/sources.list:
+#
+# List of sources from which apt can fetch and install packages.
+#
+# This file is managed and overwritten by Puppet. If you need to make
+# changes, see the Puppetmaster and its configuration.
+#
+# Currently restricted and multiverse components have been stripped off
+# in assumption that servers rarely need any packages from those
+# repositories. Should this assumption not hold, simply add them back.
+#
+# Also backports has been disabled. If you want it back, duplicate some
+# of the lines and change the distribution part to 'dist-backports'.
+#
+# deb   uri   distribution   component [component...]
+deb http://mirror.hetzner.de/ubuntu/packages <%= @lsbdistcodename %>          main universe
+deb http://mirror.hetzner.de/ubuntu/packages <%= @lsbdistcodename %>-updates  main universe
+deb http://mirror.hetzner.de/ubuntu/security <%= @lsbdistcodename %>-security main universe

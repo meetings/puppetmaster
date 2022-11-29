@@ -1,0 +1,23 @@
+# autodeploy - deploy and update once by smoke-signal at first startup
+#
+# Upstart task to automatically deploy a missing service or
+# update an existing one.
+
+description "Deploy and update a service once on first startup"
+author      "Antti <antti@meetin.gs>"
+
+task
+
+start on (local-filesystems and net-device-up IFACE!=lo)
+
+script
+<%- if @auto -%>
+<%- else -%>
+
+  if [ ! -f /root/initdeploy.run ]; then
+    touch /root/initdeploy.run
+    initctl emit smoke-signal
+  fi
+
+<%- end -%>
+end script

@@ -1,0 +1,2 @@
+#!/bin/sh
+ssh -i /usr/local/lib/id_whereami -o "PasswordAuthentication no" -o "StrictHostKeyChecking no" -o "CheckHostIP no" keeper@10.0.0.1 : 2>/dev/null

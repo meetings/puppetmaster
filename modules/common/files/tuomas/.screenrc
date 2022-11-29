@@ -1,0 +1,4 @@
+vbell off
+defutf8 on
+nonblock on
+defscrollback 1024

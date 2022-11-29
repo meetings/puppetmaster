@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# Place the new hostname into a couple of files within the new domU.
+#
+# Authors:
+#  Steve Kemp (original)
+#  Tuomas Starck (customizations for Meetin.gs)
+
+prefix=$1
+
+if [ -e /usr/share/xen-tools/common.sh ]; then
+    . /usr/share/xen-tools/common.sh
+else
+    . ./hooks/common.sh
+fi
+
+logMessage Script $0 starting
+
+echo ${hostname} > ${prefix}/etc/hostname
+
+cat >${prefix}/etc/hosts <<EOF
+127.0.0.1  localhost ${hostname}
+172.16.0.2 puppet
+EOF
+
+logMessage Script $0 finished

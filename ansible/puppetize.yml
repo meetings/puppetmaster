@@ -1,0 +1,11 @@
+---
+
+## puppetize.yml
+## 2015-05-08 / Meetin.gs
+
+- hosts: all
+  sudo: yes
+
+  tasks:
+  - name: puppetize
+    command: /usr/bin/puppet agent -o -v -l /var/log/puppet/last.log --no-daemonize

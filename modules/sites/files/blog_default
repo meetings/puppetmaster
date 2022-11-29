@@ -1,0 +1,43 @@
+<VirtualHost *:80>
+    DocumentRoot /var/www/old-blog/
+    ServerAdmin webmaster@meetin.gs
+
+    <Directory />
+        Options FollowSymLinks
+        AllowOverride None
+    </Directory>
+
+    <Directory /var/www/old-blog/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride FileInfo Options
+        Order allow,deny
+        Allow from all
+    </Directory>
+
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<VirtualHost *:8080>
+    DocumentRoot /var/www/new-wpmu/
+    ServerAdmin webmaster@meetin.gs
+
+    <Directory />
+        Options FollowSymLinks
+        AllowOverride None
+    </Directory>
+
+    <Directory /var/www/new-wpmu/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride FileInfo Options
+        Order allow,deny
+        Allow from all
+    </Directory>
+
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

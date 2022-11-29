@@ -1,0 +1,37 @@
+# Meetin.gs port butterfly visualization
+# Usage: dot -Tsvg % > butterfly.svg
+
+digraph MeetingsPortButterfly {
+    node [shape=box, style=rounded, fontsize=12];
+
+    pa1   [label="Public on dom0#x", style=bold];
+    pa2   [label="Public on dom0#y", style=bold];
+    act1  [label="Active on dom0#x"];
+    act2  [label="Active on dom0#y"];
+    prov1 [label="Provided service 1"];
+    prov2 [label="Provided service 2"];
+    domua [label="Active domU", style=bold];
+    domup [label="Passive domU", style=bold];
+    repl1 [label="Replication 1 to 2"];
+    repl2 [label="Replication 2 to 1"];
+    my1   [label="Mysql active"];
+    my2   [label="Mysql passive"];
+
+    pa1   -> act1 [color=blue];
+    pa1   -> {prov1 prov2};
+    act1  -> domua [color=blue];
+    act1  -> domup [color=red];
+    domua -> my1 [color=blue];
+    domua -> repl1;
+    repl1 -> prov2;
+    prov1 -> my1;
+
+    pa2   -> act2 [color=blue];
+    pa2   -> {prov2 prov1};
+    act2  -> domua [color=blue];
+    act2  -> domup [color=red];
+    domup -> my2;
+    domup -> repl2;
+    repl2 -> prov1;
+    prov2 -> my2;
+}

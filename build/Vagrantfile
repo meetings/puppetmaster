@@ -1,0 +1,19 @@
+# Vagrantfile for Gearsloth test environment
+# vi: set sw=2 ts=2 sts=2 ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.hostname = "i386-build"
+  config.vm.box      = "trusty-i386-2015-09-21"
+  config.vm.box_url  = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-i386-vagrant-disk1.box"
+
+  config.vm.provision :shell, path: "apt.sh"
+  config.vm.provision :shell, path: "fpm.sh"
+
+  config.vm.provider :virtualbox do |virtualbox|
+    virtualbox.name   = "i386-build"
+    virtualbox.memory = 1024
+    virtualbox.cpus   = 1
+  end
+end

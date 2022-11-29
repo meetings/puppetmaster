@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Configure apt and set up sources.
+#
+# Authors:
+#  Steve Kemp (original)
+#  Tuomas Starck (customizations for Meetin.gs)
+
+prefix=$1
+
+if [ -e /usr/share/xen-tools/common.sh ]; then
+    . /usr/share/xen-tools/common.sh
+else
+    . ./hooks/common.sh
+fi
+
+logMessage Script $0 starting
+
+# Write the sources.list suitable for Hetzner data centers.
+#
+cat >${prefix}/etc/apt/sources.list <<EOL
+# /etc/apt/sources.list:
+deb http://mirror.hetzner.de/ubuntu/packages ${dist} main universe
+deb http://mirror.hetzner.de/ubuntu/packages ${dist}-updates main universe
+deb http://mirror.hetzner.de/ubuntu/security ${dist}-security main universe
+EOL
+
+# Update the package index to get an up-to-date system.
+#
+chroot ${prefix} /usr/bin/apt-get -q update
+
+# Fix TLS on non-x86-64 systems.
+#
+if [ "$arch" = "i386" ]; then
+    logMessage "Installing libc6-xen"
+    installDebianPackage ${prefix} libc6-xen
+fi
+
+logMessage Script $0 finished

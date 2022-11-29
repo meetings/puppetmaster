@@ -1,0 +1,29 @@
+# IPv4
+127.0.0.1      localhost
+172.16.0.2     puppet
+<%- if @class.eql?("dom0") -%>
+5.9.41.212      keksi.dicole.com keksi-alt.dicole.com keksi
+5.9.41.213      myssy.dicole.com myssy-alt.dicole.com myssy
+144.76.84.100   yrtti.dicole.com yrtti-alt.dicole.com yrtti
+144.76.85.147   ruoho.dicole.com ruoho-alt.dicole.com ruoho
+46.4.71.238     savu.dicole.com savu-alt.dicole.com savu
+213.239.211.12  jojo.dicole.com jojo-alt.dicole.com jojo
+88.99.216.165   pata.dicole.com pata-alt.dicole.com pata
+95.216.8.107    kamu.dicole.com kamu-alt.dicole.com kamu
+213.239.208.190 vesi.dicole.com vesi-alt.dicole.com vesi
+178.63.54.90    tuli.dicole.com tuli-alt.dicole.com tuli
+213.239.214.130 ilma.dicole.com ilma-alt.dicole.com ilma
+<%- elsif @class.eql?("domU") -%>
+<%= @ipaddress %>  <%= @hostname %>
+<%- end -%>
+
+# IPv6
+<%- if @ipv6 -%>
+<%= @ipv6 %>  <%= @hostname %>.dicole.com <%= @hostname %>
+<%- end -%>
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts

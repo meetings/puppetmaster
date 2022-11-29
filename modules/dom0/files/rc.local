@@ -1,0 +1,14 @@
+#!/bin/sh -e
+#
+# This script is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+
+which ethtool >/dev/null && ethtool -K eth0 tx off
+
+/usr/local/sbin/palomuuri.sh
+
+exit 0

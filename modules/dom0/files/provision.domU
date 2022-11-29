@@ -1,0 +1,40 @@
+#!/bin/bash
+# 2015-04-16 / Meetin.gs domU 1st boot provisioning
+
+set -eu
+
+# Using log file also as a run once lock.
+#
+LOG=/var/log/provision.log
+[ -f $LOG ] && exit 0
+touch $LOG
+exec 2>$LOG
+exec 1>$LOG
+
+# Install puppet and wget
+DEBIAN_FRONTEND=noninteractive apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get --yes \
+  install puppet wget
+
+# Disable puppet(8) service, but enable agent.
+if [ -f /bin/systemctl ]; then
+  systemctl disable puppet
+fi
+update-rc.d -f puppet remove
+service puppet stop
+puppet agent --enable
+
+OPTS="--onetime --no-daemonize --verbose --color=false"
+puppet agent $OPTS --tags "bootstrap"
+puppet agent $OPTS
+
+DEBIAN_FRONTEND=noninteractive apt-get --yes \
+  -o Dpkg::Options::="--force-confdef" \
+  -o Dpkg::Options::="--force-confold" dist-upgrade 2>&1
+
+if [ -f /bin/systemctl ]; then
+  systemctl disable puppet
+fi
+update-rc.d -f puppet remove
+service puppet stop
+puppet agent --enable

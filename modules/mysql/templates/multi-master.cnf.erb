@@ -1,0 +1,28 @@
+# /etc/mysql/conf.d/multi-master.cnf
+#
+# Multi-master configuration for MySQL database server.
+#
+# This file is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+#
+# Some sources how this all came to be:
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+# http://mysql-mmm.org/mmm2:guide
+
+### General settings
+
+[mysqld]
+server-id          = <%= @server_id %>
+bind-address       = 0.0.0.0
+
+### Replication
+
+log_bin                  = /var/log/mysql/mysql-bin.log
+log_bin_index            = /var/log/mysql/mysql-bin.log.index
+relay_log                = /var/log/mysql/mysql-relay.log
+relay_log_index          = /var/log/mysql/mysql-relay.log.index
+expire_logs_days         = <%= @binlog_expire %>
+max_binlog_size          = 256M
+log_slave_updates        = 1
+auto_increment_increment = <%= @auto_increment %>
+auto_increment_offset    = <%= @inc_offset %>

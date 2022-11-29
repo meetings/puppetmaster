@@ -1,0 +1,3 @@
+#!/bin/bash
+ifconfig $INTERFACE {{dom0_internal_ip}} netmask {{dom0_internal_netmask}}
+for SUB in {17..31}; do route add -net 172.$SUB.0.0/16 gw 172.$SUB.0.1; done

@@ -1,0 +1,139 @@
+#!/bin/bash
+#
+# palomuuri.sh, 2015-05-04 / Meetin.gs
+#
+# This script sets up basic packet filtering and natting.
+#
+# This file is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+
+PUB_IP=<%= @public_ip %>
+PUB_IF=<%= @public_iface %>
+INT_IP=<%= @internal_ip %>
+INT_SUBNET=<%= @internal_subnet %>
+INT_IF=<%= @internal_iface %>
+
+WHITELIST=(89.27.0.0/19 88.112.32.0/19)
+WHITELIST+=(213.239.211.12)  # jojo
+WHITELIST+=(144.76.84.100)   # yrtti
+WHITELIST+=(144.76.85.147)   # ruoho
+WHITELIST+=(5.9.41.212)      # keksi
+WHITELIST+=(5.9.41.213)      # myssy
+WHITELIST+=(46.4.71.238)     # savu
+WHITELIST+=(88.99.216.165)   # pata
+WHITELIST+=(95.216.8.107)    # kamu
+WHITELIST+=(213.239.208.190) # vesi
+WHITELIST+=(178.63.54.90)    # tuli
+WHITELIST+=(213.239.214.130) # ilma
+
+FLEXPACK=(78.46.26.1 176.9.12.105 176.9.12.106 176.9.15.204)
+
+RST=$(tput sgr0)
+RED=$(tput setaf 1)
+GRE=$(tput setaf 2)
+
+end() {
+  echo " $RED***$RST error: $@"
+  reset "ACCEPT"
+  exit 1
+}
+
+say() {
+  echo " $GRE+$RST $@"
+}
+
+xt() {
+  /sbin/iptables $@ || end "$@ => $?"
+}
+
+getifip() {
+  PUB=$(ip addr show dev $1 | sed -n '/inet /{s/[^0-9]\+//;s/\/.\+//p;q}')
+}
+
+reset() {
+  xt -F
+  xt -X
+  xt -t nat -F
+  xt -t nat -X
+
+  xt -P INPUT $1
+  xt -P FORWARD ACCEPT
+  xt -P OUTPUT ACCEPT
+  xt -t nat -P PREROUTING ACCEPT
+  xt -t nat -P OUTPUT ACCEPT
+  xt -t nat -P POSTROUTING ACCEPT
+}
+
+if [ $(id -u) -ne 0 ]; then
+  echo " *** error: root privileges required"
+  exit 1
+fi
+
+### Default policy is to ACCEPT incoming traffic!
+# Other rules should be written accordingly.
+#
+say "RESET"
+reset "ACCEPT"
+
+### Accept only some icmp packets.
+#
+say "ICMP"
+xt -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+xt -A INPUT -p icmp --icmp-type destination-unreachable -j ACCEPT
+xt -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+xt -A INPUT -p icmp --icmp-type time-exceeded -j ACCEPT
+xt -A INPUT -p icmp --icmp-type parameter-problem -j ACCEPT
+xt -A INPUT -p icmp -j DROP
+
+### Allow only a chosen few to access port 22.
+#
+say "local -> :22"
+xt -A INPUT -s 127.0.0.0/8 -p tcp --dport 22 -j ACCEPT
+xt -A INPUT -s 10.0.0.0/8 -p tcp --dport 22 -j ACCEPT
+xt -A INPUT -s 172.16.0.0/12 -p tcp --dport 22 -j ACCEPT
+
+say "dom0 -> :22"
+for ADDR in ${WHITELIST[@]}; do
+  xt -A INPUT -p tcp -s $ADDR --dport 22 -j ACCEPT
+done
+
+say "LOGDROP ssh"
+if [ -f /var/run/bootstrapping_firewall ]; then
+  rm /var/run/bootstrapping_firewall
+else
+  xt -A INPUT -p tcp --dport 22 -m limit --limit 3/min -j LOG --log-prefix "DROP:ssh:"
+  xt -A INPUT -p tcp --dport 22 -j DROP
+fi
+
+### Do not route ssh to front.
+#
+for ADDR in ${FLEXPACK[@]}; do
+  xt -A FORWARD -p tcp -d $ADDR --dport 22 -j DROP
+done
+
+### NAT a.k.a. grant domUs access to the Internetz.
+#
+say "$PUB_IF <~ NAT"
+xt -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+xt -t nat -A POSTROUTING -s 10.0.0.0/8 -o $PUB_IF -j SNAT --to $PUB_IP
+xt -t nat -A POSTROUTING -s 172.16.0.0/12 -o $PUB_IF -j SNAT --to $PUB_IP
+xt -t nat -A POSTROUTING -s 10.0.0.0/8 -o $INT_IF -j SNAT --to $INT_IP
+xt -t nat -A POSTROUTING -s $INT_SUBNET -o $INT_IF -j SNAT --to $INT_IP
+
+### Resetting port butterfly to normal state.
+#
+say "port butterfly:"
+for SERVICE in /usr/local/lib/pb/*; do
+  /usr/local/sbin/meetings_pb_route_select.sh $SERVICE normal
+done
+
+### Run local firewall extensions.
+#
+for RC in /usr/local/lib/palomuuri/*; do
+  if [ -x $RC ]; then
+    say "exec: $(basename $RC)"
+    . $RC 2> /dev/null
+  fi
+done
+
+exit 0

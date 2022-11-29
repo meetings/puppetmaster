@@ -1,0 +1,209 @@
+---
+
+## bootstrap.yml
+## 2015-08-15 / Meetin.gs
+## Bootstrap a server from rescue mode to production ready system.
+
+- hosts: bootstrap
+  remote_user: root
+  gather_facts: no
+
+  vars:
+    known_hosts_file: "~/.ssh/known_hosts"
+
+    # you can also uncomment these and comment the whole vars_prompt
+    # dom0_public_ip: "46.4.71.238"
+    # dom0_internal_ip: "172.19.0.1"
+    # dom0_internal_netmask: "255.240.0.0"
+
+  vars_prompt:
+    - name: "dom0_public_ip"
+      prompt: "Public IP"
+      private: no
+
+    - name: "dom0_internal_ip"
+      prompt: "Internal IP (e.g. 172.20.0.1)"
+      private: no
+
+    - name: "dom0_internal_netmask"
+      prompt: "Internal network netmask"
+      default: "255.240.0.0"
+      private: no
+
+  tasks:
+  - name: set full hostname fact for convenience and local_action usage
+    set_fact:
+      dom0_full_hostname: "{{ ansible_ssh_host | default(inventory_hostname) }}"
+
+  - name: calculate short hostname
+    local_action: >
+      command sh -c 'echo {{dom0_full_hostname}} | perl -p -e "s/.dicole.com//"'
+    register: calchostname
+
+  - name: calculate subnet
+    local_action: >
+      command sh -c 'echo {{dom0_internal_ip}} | perl -p -e "s/\.1$/.0\/16/"'
+    register: calcsubnet
+
+  - name: set calculated facts
+    set_fact:
+      dom0_hostname: "{{calchostname.stdout}}"
+      dom0_allocated_subnet: "{{calcsubnet.stdout}}"
+
+  - name: remove offending ssh key just in case
+    local_action: >
+      command ssh-keygen -f {{ known_hosts_file }}
+      -R {{dom0_full_hostname}}
+
+  - name: copy installer configuration
+    template: src=installimage.j2 dest=/root/inst.conf
+
+  - name: execute system installer
+    command: /root/.oldroot/nfs/install/installimage -ac /root/inst.conf
+
+  - name: reboot to new system
+    command: shutdown -r now "Reboot by Ansible"
+
+  - name: wait for dom0 to go down and come up again
+    local_action:
+      module: wait_for
+      delay: 9
+      port: 22
+      host: "{{dom0_full_hostname}}"
+
+  - name: remove offending ssh key again
+    local_action: >
+      command ssh-keygen -f {{ known_hosts_file }}
+      -R {{dom0_full_hostname}}
+
+  - name: 'prepare machine for ansible -- update apt'
+    raw: sudo apt-get update
+
+  - name: 'prepare machine for ansible -- install python2 with deps'
+    raw: sudo apt-get -y install python-simplejson python-pexpect
+
+  - name: make this a dom0
+    file: dest=/etc/dom0 state=touch
+
+  - name: install tinc
+    apt: update_cache=yes install_recommends=no name=tinc
+
+  - name: configure tinc -- set nets.boot
+    copy: src=tinc/nets.boot dest=/etc/tinc/nets.boot
+
+  - name: configure tinc -- creating network directories
+    file:
+      path: /etc/tinc/dicolerootnet/hosts
+      state: directory
+
+  - name: configure tinc -- set tinc.conf
+    copy: src=tinc/tinc.conf dest=/etc/tinc/dicolerootnet/tinc.conf
+
+  - name: configure tinc -- set tinc-up
+    template: src=tinc/tinc-up.j2 dest=/etc/tinc/dicolerootnet/tinc-up
+
+  - name: configure tinc -- set tinc-up executable
+    file:
+      path: /etc/tinc/dicolerootnet/tinc-up
+      mode: 0755
+
+  - name: configure tinc -- set tinc-down
+    copy: src=tinc/tinc-down dest=/etc/tinc/dicolerootnet/tinc-down
+
+  - name: configure tinc -- set tinc-down executable
+    file:
+      path: /etc/tinc/dicolerootnet/tinc-down
+      mode: 0755
+
+  - name: configure tinc -- prepare own hosts file
+    template: src=tinc/hosts-self.j2 dest=/etc/tinc/dicolerootnet/hosts/{{dom0_hostname}}
+
+  - name: configure tinc -- generate tinc private key
+    expect:
+      command: tincd -n dicolerootnet -K
+      responses:
+        'Please enter a file to save private RSA key to': ""
+        'Please enter a file to save public RSA key to': ""
+
+  - name: configure tinc -- install hosts file for yrtti
+    copy: src=tinc/hosts/yrtti dest=/etc/tinc/dicolerootnet/hosts/yrtti
+
+  - name: configure tinc -- install hosts file for kivi
+    copy: src=tinc/hosts/kivi dest=/etc/tinc/dicolerootnet/hosts/kivi
+
+  - name: restart tinc
+    service:
+      name: tinc
+      state: restarted
+
+  - name: add puppet to hosts
+    lineinfile:
+        dest: /etc/hosts
+        insertafter: '^127.0.0.1'
+        line: '172.16.0.2 puppet'
+
+  - name: preparing instructions
+    command: cat /etc/tinc/dicolerootnet/hosts/{{ dom0_hostname }}
+    register: hostsfilecontent
+
+  - name: preparing more instructions
+    command: echo "!!! DO THIS MANUAL STEP !!! Take the file content from above step (after 'MSG:') and place it on either kivi or yrtti, at a file called /etc/tinc/dicolerootnet/hosts/{{dom0_hostname}} -- the process should continue automatically after this has been done."
+    register: hostsfileinstructions
+
+  - name: outputting file content for manual step
+    debug: "msg={{hostsfilecontent.stdout}}"
+
+  - name: outputting instructions for manual step
+    debug: "msg={{hostsfileinstructions.stdout}}"
+
+  - name: DO ABOVE MANUAL STEP so puppetmaster appears, currently waiting...
+    wait_for: host=puppet port=8140 timeout=999
+
+  - name: install puppet
+    apt: install_recommends=no name=puppet
+
+  - name: disable starting puppet agent daemon
+    command: systemctl disable puppet
+
+  - name: stop puppet agent daemon
+    service:
+      name: puppet
+      state: stopped
+
+  - name: enable puppet agent manual runs
+    command: /usr/bin/puppet agent --enable
+
+  - name: ensure firewall does not drop ssh during first puppet run
+    file:
+      path: /var/run/bootstrapping_firewall
+      state: touch
+
+  - name: bootstrapping puppet run
+    command: >
+      /usr/bin/puppet agent --onetime --no-daemonize
+      --logdest /var/log/pup.0.log --tags bootstrap
+
+  - name: ensure firewall does not drop ssh during second puppet run
+    file:
+      path: /var/run/bootstrapping_firewall
+      state: touch
+
+  - name: actual puppet run
+    command: >
+      /usr/bin/puppet agent --onetime --no-daemonize
+      --logdest /var/log/pup.1.log
+
+  - name: upgrade the system
+    apt: upgrade=full
+
+  - name: fix xen kernel order regression bug
+    command: >
+      /usr/sbin/dpkg-divert --divert /etc/grub.d/08_linux_xen
+      --rename /etc/grub.d/20_linux_xen
+
+  - name: update grub after regression fix
+    command: /usr/sbin/update-grub
+
+  - name: reboot the system
+   # direct shutdown would kill the connection and report task as failed
+    command: sh -c 'sh -c "sleep 5; shutdown -r now Ansible" &'

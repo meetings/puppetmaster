@@ -1,0 +1,22 @@
+<<<config>>>
+
+Host <<<host_list_1>>>
+ForwardAgent yes
+Hostname kamu.dicole.com
+CheckHostIP no
+
+Host <<<host_list_2>>>
+ForwardAgent yes
+Hostname kamu.dicole.com
+CheckHostIP no
+
+Host <<<root_host_list>>>
+ForwardAgent yes
+Hostname kamu.dicole.com
+CheckHostIP no
+
+Host <<<root_host_list>>>
+User root
+
+# Uncomment this if you are using an internet that blocks ssh port
+# ProxyCommand ssh -p443 root@kamu.dicole.com exec nc %h %p

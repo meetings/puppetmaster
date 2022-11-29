@@ -1,0 +1,12 @@
+# /etc/sudoers
+
+Defaults  env_reset
+Defaults  env_keep="SSH_AUTH_SOCK"
+Defaults  secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+Defaults:vagrant !requiretty
+
+root    ALL=(ALL:ALL) ALL
+vagrant ALL=(ALL:ALL) NOPASSWD: ALL
+
+#includedir /etc/sudoers.d

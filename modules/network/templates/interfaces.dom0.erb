@@ -1,0 +1,24 @@
+# /etc/network/interfaces
+#
+# This file is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+
+auto lo eth0 eth0:0
+
+iface lo inet loopback
+
+iface eth0 inet6 static
+  address   <%= @ipv6 %>
+  netmask   64
+  gateway   fe80::1
+
+iface eth0 inet static
+  address   <%= @ip %>
+  netmask   <%= @netmask %>
+  broadcast <%= @broadcast %>
+  gateway   <%= @gateway %>
+  up ip route del <%= @subnet %> dev eth0
+
+iface eth0:0 inet static
+  address   10.0.0.1
+  netmask   255.0.0.0

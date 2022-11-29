@@ -1,0 +1,59 @@
+# /etc/logrotate.d/rsyslog
+#
+# This file is managed and overwritten by Puppet. If you need
+# to make changes, see the Puppetmaster and its configuration.
+
+/var/log/alert.log
+/var/log/api.log
+/var/log/auth.log
+/var/log/cron.log
+/var/log/cuty.log
+/var/log/daemon.log
+/var/log/debug
+/var/log/kern.log
+/var/log/lighty/err.log
+/var/log/lighty/info.log
+/var/log/local.log
+/var/log/lpr.log
+/var/log/mail.err
+/var/log/mail.info
+/var/log/mail.log
+/var/log/mail.warn
+/var/log/messages
+/var/log/nag.log
+/var/log/nginx.err
+/var/log/nginx.log
+/var/log/paint.log
+/var/log/pollbal.log
+/var/log/sloth.log
+/var/log/stats.log
+/var/log/syslog
+/var/log/user.log
+{
+  weekly
+  rotate 52
+  compress
+  delaycompress
+  missingok
+  notifempty
+  sharedscripts
+  postrotate
+    reload rsyslog >/dev/null 2>&1 || true
+    service rsyslog rotate >/dev/null 2>&1 || true
+  endscript
+}
+
+/var/log/worker.log
+{
+  daily
+  rotate 52
+  compress
+  delaycompress
+  missingok
+  notifempty
+  sharedscripts
+  postrotate
+    reload rsyslog >/dev/null 2>&1 || true
+    service rsyslog rotate >/dev/null 2>&1 || true
+  endscript
+}

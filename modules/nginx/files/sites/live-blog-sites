@@ -1,0 +1,106 @@
+server {
+    listen 80;
+    listen 443;
+    server_name www.meetin.gs matchmaking.meetin.gs chrome.meetin.gs register.meetin.gs register-to-slush.meetin.gs;
+
+    ssl_certificate     /etc/ssl/private/meetings.pem;
+    ssl_certificate_key /etc/ssl/private/meetings.pem;
+
+    if ($scheme = http) {
+        return 302 https://$host$request_uri;
+    }
+
+    location / {
+        proxy_connect_timeout       300s;
+        proxy_send_timeout          300s;
+        proxy_read_timeout          300s;
+        send_timeout                300s;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://live_blog_pool;
+    }
+}
+
+server {
+    listen 80;
+    listen 443;
+    server_name www.dicole.com www.taloushallinnonrunkoverkko.fi swipetomeet.com biohackersummit.com ict2015.fi biohakkerit.fi site.biohakkerit.fi;
+
+    ssl_certificate     /etc/letsencrypt/live/dicolelivebundle/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dicolelivebundle/privkey.pem;
+
+    if ($scheme = http) {
+        return 302 https://$host$request_uri;
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        default_type "text/plain";
+        root         /var/www/letsencrypt;
+    }
+
+    location / {
+        proxy_connect_timeout       300s;
+        proxy_send_timeout          300s;
+        proxy_read_timeout          300s;
+        send_timeout                300s;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://live_blog_pool;
+    }
+}
+
+server {
+    listen 80;
+    listen 443;
+    server_name biohackingbook.com kurssi.biohakkerit.fi new.biohackersummit.com;
+
+    ssl_certificate     /etc/letsencrypt/live/dicolelivebundle/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dicolelivebundle/privkey.pem;
+
+    if ($scheme = http) {
+        return 302 https://$host$request_uri;
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        default_type "text/plain";
+        root         /var/www/letsencrypt;
+    }
+
+    location / {
+        proxy_connect_timeout       300s;
+        proxy_send_timeout          300s;
+        proxy_read_timeout          300s;
+        send_timeout                300s;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://live_wpmu_pool;
+    }
+}
+
+server {
+    listen 80;
+    listen 443;
+    server_name courses.biohacker.center;
+
+    ssl_certificate     /etc/letsencrypt/live/dicolelivebundle/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dicolelivebundle/privkey.pem;
+
+    location ^~ /.well-known/acme-challenge/ {
+        default_type "text/plain";
+        root         /var/www/letsencrypt;
+    }
+
+    if ($scheme = http) {
+        return 302 https://$host$request_uri;
+    }
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://varnish_pool;
+    }
+}

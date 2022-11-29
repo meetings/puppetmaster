@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# Add Meetin.gs role to the new domU.
+
+prefix=$1
+
+if [ -e /usr/share/xen-tools/common.sh ]; then
+    . /usr/share/xen-tools/common.sh
+else
+    echo "Meetin.gs role installation failed"
+    exit 1
+fi
+
+logMessage Script $0 starting
+
+# Classify this machine as a domU.
+#
+touch ${prefix}/etc/domU
+
+# Allow root to log in with password.
+#
+# This is normally not required, but if automatic puppetizing fails
+# and user accounts are not created, this might come in handy.
+#
+sed -i '/^PermitRootLogin/c\PermitRootLogin yes' ${prefix}/etc/ssh/sshd_config
+
+# Enable first boot provisioning.
+#
+cat ${prefix}/etc/rc.local > ${prefix}/etc/rc.local.orig
+cat /usr/local/lib/rc.local.domU > ${prefix}/etc/rc.local
+cat /usr/local/lib/provision.domU > ${prefix}/root/provision.sh
+chmod 755 ${prefix}/root/provision.sh
+
+logMessage Script $0 finished

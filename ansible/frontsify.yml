@@ -1,0 +1,14 @@
+---
+
+## frontsify.yml
+## 2015-04-09 / Meetin.gs
+## Distribute a new version of fronts.config(pf) to everywhere.
+
+- hosts: all
+  sudo: yes
+
+  tasks:
+  - name: copy fronts.config
+    copy:
+      src: ../modules/ssh/files/pf/conf/fronts.config
+      dest: /usr/local/pf/conf/fronts.config

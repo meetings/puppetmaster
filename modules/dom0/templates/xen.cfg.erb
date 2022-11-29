@@ -1,0 +1,9 @@
+# /etc/default/grub.d/xen.cfg
+
+echo "Including overrides from /etc/default/grub.d/xen.cfg"
+
+GRUB_TIMEOUT=1
+GRUB_DEFAULT="Ubuntu GNU/Linux, with Xen hypervisor"
+
+GRUB_CMDLINE_XEN=""
+GRUB_CMDLINE_XEN_DEFAULT="dom0_vcpus_pin dom0_max_vcpus=2 dom0_mem=<%= @dom0_mem %>M,max:<%= @dom0_mem %>M"

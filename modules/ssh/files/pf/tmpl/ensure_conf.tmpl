@@ -1,0 +1,20 @@
+{
+    gateway_ssh_host => '<<<host>>>',
+    gateway_ssh_user => 'portforward',
+    gateway_ssh_port => '<<<gw_port>>>',
+
+    # alt is used to autogenerate different rsa fingerprint on older
+    # ssh clients which do not fingerprint each port separately
+
+    local_ssh_gateway_host => '<<<alt_host>>>',
+    local_ssh_gateway_port => '<<<service_port>>>',
+
+    local_ssh_user => 'root',
+    local_ssh_port => '22',
+
+    front_config => '<<<front_config>>>',
+
+    redirects => [
+<<<redirects>>>
+    ]
+}
